@@ -98,7 +98,7 @@ WITH top_spenders as (
 		JOIN customer cu ON cu.customer_id = iv.customer_id
 		GROUP BY iv.customer_id, tr.track_id, cu.first_name, cu.last_name
 		ORDER BY Amt_Spent desc
-        
+        LIMIT 5
 )
         
 SELECT ts.customer_id, ts.full_name, art.name, tr.track_id, ts.Amt_Spent
@@ -110,37 +110,35 @@ GROUP BY 1, 2, 3, 4
 ORDER BY 5 desc
 
 
-WITH customer_spending AS (
-    SELECT 
-        cu.customer_id, 
-        CONCAT(cu.first_name, ' ', cu.last_name) AS full_name, 
-        art.artist_id, 
-        art.name AS artist_name,
-        SUM(iv.total) AS total_spent
-    FROM 
-        customer cu
-    JOIN 
-        invoice iv ON iv.customer_id = cu.customer_id
-    JOIN 
-        invoice_line il ON il.invoice_id = iv.invoice_id
-    JOIN 
-        track tr ON tr.track_id = il.track_id
-    JOIN 
-        album al ON al.album_id = tr.album_id
-    JOIN 
-        artist art ON art.artist_id = al.artist_id
-    GROUP BY 
-        cu.customer_id, cu.first_name, cu.last_name, art.artist_id, art.name
-)
+WITH best_selling_artist AS (
+	SELECT ar.artist_id as Artist_id, ar.name as Artist_name,
+    SUM(il.unit_price * il.quantity) as total_sales
+    FROM invoice_line il
+    JOIN track tr on tr.track_id = il.track_id
+    JOIN album al on al.album_id = tr.album_id
+    JOIN artist ar on ar.artist_id = al.artist_id
+    GROUP BY 1
+    ORDER BY 3 DESC
+    LIMIT 1
+    )
 
-SELECT 
-    customer_id, 
-    full_name, 
-    artist_name, 
-    total_spent
-FROM 
-    customer_spending
-ORDER BY 
-    total_spent DESC;
+SELECT c.customer_id, c.first_name, c.last_name, bsa.Artist_name,
+SUM(il.unit_price * il.quantity) as Amount_Spent
+FROM invoice i
+JOIN customer c ON c.customer_id = i.customer_id
+JOIN invoice_line il ON il.invoice_id = i.invoice_id
+JOIN track t ON t.track_id = il.track_id
+JOIN album al ON al.album_id = t.album_id
+JOIN best_selling_artist bsa ON bsa.Artist_id = al.artist_id
+GROUP BY 1,2,3,4
+ORDER BY 5 DESC 
 
-'Q10 -- 
+
+
+'Q10 -- THE MOST POPULAR GENRE FOR EACH COUNTRY. THE MOST POPULAR GENRE IS THE GENRE WITH HIGHEST AMOUNT OF PURCHASE
+FOR COUNTRIES WHERE MAX NUMBER OF PURCHASES IS SHARED. ALL GENRE IS RETURNED'
+
+
+'Q11 -- DETERMINE THE CUSTOMER THAT HAS SPENT THE MOST ON MONEY FOR EACH COUNTRY- TOP SPENDER FOR EACH COUNTRY'
+'FOR COUNTRIES WHERE THE TOP AMOUNT IS SHARED, PROVIDE ALL CUSTOMERS WHO SPENT THE AMOUNT
+
