@@ -89,7 +89,7 @@ ORDER BY milliseconds desc
 'Q9 -- FIND HOW MUCH AMOUNT SPENT BY EACH CUSTOMER ON ARTISTS? 
 -- WRTIE A QUERY TO RETURN CUSTOMER NAME, ARTIST NAME AND TOTAL SPENT'
 
-WITH top_spenders as (
+WITH customer_spending as (
 		SELECT iv.customer_id, CONCAT(cu.first_name, ' ', cu.last_name) as full_name,
 		tr.track_id, SUM(iv.total) as Amt_Spent 
 		FROM track tr
@@ -97,17 +97,18 @@ WITH top_spenders as (
 		JOIN invoice iv ON iv.invoice_id = il.invoice_id
 		JOIN customer cu ON cu.customer_id = iv.customer_id
 		GROUP BY iv.customer_id, tr.track_id, cu.first_name, cu.last_name
-		ORDER BY Amt_Spent desc
-        LIMIT 5
 )
-        
-SELECT ts.customer_id, ts.full_name, art.name, tr.track_id, ts.Amt_Spent
-FROM artist art
-JOIN album al ON al.artist_id = art.artist_id
-JOIN track tr ON tr.album_id  = al.album_id
-JOIN top_spenders ts ON ts.track_id = tr.track_id 
-GROUP BY 1, 2, 3, 4
-ORDER BY 5 desc
+
+SELECT cs.customer_id, 
+       cs.full_name, 
+       art.name AS artist_name, 
+       SUM(cs.Amt_Spent) AS total_spent
+FROM customer_spending cs
+JOIN track tr ON cs.track_id = tr.track_id
+JOIN album al ON tr.album_id = al.album_id
+JOIN artist art ON al.artist_id = art.artist_id
+GROUP BY cs.customer_id, cs.full_name, art.name
+ORDER BY total_spent DESC;
 
 ----------- 2
 
@@ -120,7 +121,6 @@ WITH best_selling_artist AS (
     JOIN artist ar on ar.artist_id = al.artist_id
     GROUP BY 1
     ORDER BY 3 DESC
-    LIMIT 1
     )
 
 SELECT c.customer_id, c.first_name, c.last_name, bsa.Artist_name,
@@ -132,7 +132,7 @@ JOIN track t ON t.track_id = il.track_id
 JOIN album al ON al.album_id = t.album_id
 JOIN best_selling_artist bsa ON bsa.Artist_id = al.artist_id
 GROUP BY 1,2,3,4
-ORDER BY 5 DESC 
+ORDER BY 5 DESC;
 
 
 'Q10 -- THE MOST POPULAR GENRE FOR EACH COUNTRY. THE MOST POPULAR GENRE IS THE GENRE WITH HIGHEST AMOUNT OF PURCHASE
@@ -145,7 +145,8 @@ WITH country_spending AS (
 	GROUP BY iv.billing_country, iv.customer_id
     )
 
-SELECT DISTINCT cs.billing_country, gen.name as Genre, COUNT(il.quantity) as purchases
+SELECT DISTINCT cs.billing_country, gen.name as Genre, COUNT(il.quantity) as purchases,
+ROW_NUMBER() OVER(PARTITION BY cs.billing_country ORDER BY COUNT(il.quantity) desc) AS RowNo
 FROM genre gen
 JOIN track tr ON tr.genre_id = gen.genre_id
 JOIN invoice_line il ON il.track_id = tr.track_id
@@ -182,11 +183,13 @@ WITH top_customers as (
     ORDER BY Amt
     )
 
-SELECT iv.billing_country, tc.first_name, tc.last_name, tc.customer_id, tc.Amt
+SELECT iv.billing_country, tc.first_name, tc.last_name, tc.customer_id, tc.Amt,
+ROW_NUMBER() OVER(PARTITION BY iv.billing_country ORDER BY SUM(tc.Amt) desc) as RowN
 FROM invoice iv
 JOIN top_customers tc ON tc.customer_id = iv.customer_id
 GROUP BY 1,2,3,4
-ORDER BY 1,5 DESC    "sorted by country and top spenders in each country"
+ORDER BY 1,5 DESC   "sorted by country and top spenders in each country"
+
 
 ---------- 2
 
@@ -200,24 +203,3 @@ WITH customer_with_country AS (
     
 SELECT * FROM customer_with_country WHERE RowNo <= 1
 
-
------------- 3
-
-WITH RECURSIVE 
-	customer_with_country AS (
-		SELECT c.customer_id, c.first_name, c.last_name, c.country, SUM(iv.total) as total_spending
-        FROM invoice iv
-        JOIN customer c ON c.customer_id =  iv.customer_id
-        GROUP BY 1,2,3,4
-        ORDER BY 4,5 DESC),        
-	country_max_spend AS (
-		SELECT country, max(total_spending) as max_spending
-        FROM customer_with_country
-        Group by couuntry )
-        
-SELECT cc.country, cc.total_spending, cc.first_name, cc.last_name, cc.customer_id
-FROM customer_with_country cc
-JOIN country_max_spend ms ON cc.country = ms.country
-WHERE cc.total_spending = ms.max_spending
-ORDER BY 1;
-        
