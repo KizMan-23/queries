@@ -1,3 +1,5 @@
+USE CTE_TRIAL;
+
 INSERT INTO cte_trial.employee (emp_id, emp_name, salary)
 VALUES 	(101, 'Mohan', 40000),
 		(102, "James", 50000),
