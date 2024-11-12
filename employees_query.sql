@@ -19,15 +19,10 @@ WHERE salary > (
 'MULTIPLE ROW SUBQUERY'
 'Q2 -- FIND THE EMPLOYEE WHO EARNS THE HIGHEST SALARY IN EACH DEPARTMENT'
 
-SELECT * from sample_employees
-Group by department
-order by max(salary), department desc
-
 select department, max(salary)
 from sample_employees
 group by department
 order by max(salary) desc
-
 
 SELECT * from sample_employees
 where (department, salary) IN (select department, max(salary)
@@ -35,7 +30,7 @@ where (department, salary) IN (select department, max(salary)
 								group by department
 								order by max(salary) desc)
                                 
-                                
+
 'Q3 -- FIND THE DEPARMENT WHO DO NOT HAVE ANY MANAGERS'
 
 select distinct dept_no
@@ -48,25 +43,25 @@ where department not in (select distinct dept_no
                         
 -- correlated query --
 select * from sample_employees s
-where not exists (select * from dept_managers d where s.department = d.department);
+where not exists (select * from dept_managers d where s.department = d.dept_no);
                         
 'CORRELATED SUBQUERY'
+
 'Q4 -- FIND EMPLOYEES IN EACH DEPARTMENT WHO EARN MORE THAN THE AVERAGE SALARY IN THAT DEPARTMENT'
 
-select department, avg(salary)
-from sample_employees
-group by department
+WITH dept_avg AS (select department, CAST(avg(salary) AS SIGNED) as avg_sal
+				from sample_employees
+				group by department)
 
+SELECT * from sample_employees e1
+Join dept_avg ON dept_avg.department = e1.department
+WHERE e1.salary > dept_avg.avg_sal
+--------2 
 select * from  sample_employees e1
 where salary > ( select avg(salary)
 				from sample_employees e2
-				where e2.department = e1.department);
-                
-select * from sample_employees e1
-join sample_employees e2 on e2.emp_no = e1.emp_no
-where e1.salary > ( select avg(salary)
-				from sample_employees e2
-				where e2.department = e1.department);
+				where e2.department = e1.department
+                group by e2.department);
                 
 
 'NESTED QUERY'
@@ -74,7 +69,7 @@ where e1.salary > ( select avg(salary)
 
 SELECT * ,
 (CASE WHEN salary > (select Avg(salary) from sample_employees)
-	  then 'Higher Salary than Avg'
+	then 'Higher Salary than Avg'
 	else "Below Avg"
             end ) AS remarks
 FROM sample_employees
@@ -97,13 +92,13 @@ where not exists ( select 1 from employee_history eh
 					where eh.emp_no = se.emp_no);
 
 
-'Q7 - Gice 10% increment to all employees of Staff and Senior Staff position based on the maximum salary earned by an emp in each deot'
+'Q7 - Give 10% increment to all employees of Staff and Senior Staff position based on the maximum salary earned by an emp in each dept'
 
 with dept_max as (select department, max(salary) as top_salary from sample_employees
 group by department)
 
-select *, (top_salary + (top_salary*0.1)) as bonus 
+select *, (top_salary*0.1) as bonus
 from sample_employees e1
 join dept_max dm ON dm.department = e1.department
-where e1.emp_status = ("Staff" or 'Senior Staff') 'Use of OR in query'
+where e1.emp_status IN ("Staff",'Senior Staff')   'Use of OR in query'
 
