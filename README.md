@@ -14,10 +14,18 @@ PySpark is the Python API for Apache Spark, a powerful distributed computing fra
 business the more and offer growth insights for the business.
 
 PySpark as an apache spark api is accessible through the data analytics platform, Databricks. All pyspark projects were carried out on the databricks workspace notebooks.
+
 [Employee On PySpark](employees_in_pyspark.ipynb) is replication and re-purposing of the sql version of employee_sql problems where company_employees relation problems were sorted using pypsark applications. This was a project to show the similarites and difficulties between sql and pyspark in providing business solutions. 
+
+![emp on spark](https://github.com/user-attachments/assets/fd866a58-0180-4bf2-8d7e-6537c0869e90)
 
 [spotify streams on pyspark](pyspark_on_spotify_streams.ipynb) is a typical analysis of track, artists and album data across different streaming platforms such as spotify, YouTube, TikTok etc. The project showcases the use of pyspark
 as an analytical solution to provide understaning and metrics into the numbers surrounding streams of Tracks and Arists performances.
 
+![basic ml spar](https://github.com/user-attachments/assets/e402d84e-93fd-4534-902e-10bb5f25d86b)
+
 [Basic ML on Pyspark](basic_ml_on_pyspark.ipynb) is a continued project on the capabilities of pyspark. utilizing Mlib functions of spark, classical regression and classification tasks and models can be performed on Resilient Distributed Datasets(RDD) which is a core structure for spark framework.
+
+![basic ml spark 2](https://github.com/user-attachments/assets/d5a3123b-da8b-404c-8df8-b524acfddc20)
+
 
